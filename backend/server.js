@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -7,9 +8,10 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection [cite: 145]
-mongoose.connect("mongodb://127.0.0.1:27017/erp-db")
-  .then(() => console.log("MongoDB connected "))
-  .catch(err => console.log(err));
+const dbURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/erp-db";
+mongoose.connect(dbURI)
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch(err => console.log("Database connection error:", err));
 
 // Schema - Expanded for Task 1 Requirements [cite: 27, 48]
 const userSchema = new mongoose.Schema({
@@ -20,11 +22,13 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-// --- LINKING TASK 1 ROUTE ---
-// Path: backend/api/auth/register.js
-const authRoutes = require('./api/auth/register');
-app.use('/api/auth', authRoutes); 
+// --- TASK 1: REGISTER API ---
+const registerRoutes = require('./api/auth/register');
+app.use('/api/auth', registerRoutes);
 
+// --- TASK 2: LOGIN API ---
+const loginRoutes = require('./api/auth/login');
+app.use('/api/auth', loginRoutes);
 // --- EXISTING TEAM ROUTES (DO NOT MODIFY) ---
 
 // READ
