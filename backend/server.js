@@ -22,13 +22,14 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-// --- TASK 1: REGISTER API ---
+// --- TASK 1 ---
 const registerRoutes = require('./api/auth/register');
 app.use('/api/auth', registerRoutes);
 
-// --- TASK 2: LOGIN API ---
-const loginRoutes = require('./api/auth/login');
-app.use('/api/auth', loginRoutes);
+// --- TASK 2 ---
+const loginRoutes = require('./api/auth/login'); // Check this path!
+app.use('/api/auth', loginRoutes); // This is where line 27 in your error is likely located
+
 // --- EXISTING TEAM ROUTES (DO NOT MODIFY) ---
 
 // READ
