@@ -5,7 +5,7 @@ const TextInput = ({ labelName, textType, placeholder }) => {
   return (
     <span className="input-field">
       <label id="input-label">{labelName}</label>
-      <input type={textType} placeholder={placeholder} />
+      <input className="text-input" type={textType} placeholder={placeholder} />
     </span>
   );
 };

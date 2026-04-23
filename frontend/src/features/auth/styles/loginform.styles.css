@@ -1,7 +1,22 @@
 .login-form {
   background-color: white;
-  height: 60%;
+  height: 75%;
   width: 26%;
-  padding: 22px;
+  padding: 14px 22px;
   border-radius: 10px;
+}
+.sign-up-heading {
+  margin-bottom: 40px;
+}
+.login-heading {
+  margin-bottom: 16px;
+}
+.sign-up-toggle {
+  color: #028bbf;
+  cursor: pointer;
+}
+.frgtn-password-heading {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
 }

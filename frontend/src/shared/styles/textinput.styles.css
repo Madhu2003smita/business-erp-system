@@ -3,12 +3,13 @@
   flex-direction: column;
   /* width: 200px; */
   font-size: 13px;
+  margin-bottom: 15px;
 }
 #input-label {
-  margin: 10px 0px;
+  margin-bottom: 4px;
   color: #028bbf;
 }
-input {
+.text-input {
   height: 28px;
   border-radius: 6px;
   border: 2px solid #028bbf;
