@@ -14,21 +14,10 @@ mongoose.connect(dbURI)
   .catch(err => console.log("Database connection error:", err));
 
 // Schema - Expanded for Task 1 Requirements [cite: 27, 48]
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-});
+const User = require('./models/User');
 
-const User = mongoose.model("User", userSchema);
-
-// --- TASK 1 ---
-const registerRoutes = require('./api/auth/register');
-app.use('/api/auth', registerRoutes);
-
-// --- TASK 2 ---
-const loginRoutes = require('./api/auth/login'); // Check this path!
-app.use('/api/auth', loginRoutes); // This is where line 27 in your error is likely located
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
 
 // --- EXISTING TEAM ROUTES (DO NOT MODIFY) ---
 
