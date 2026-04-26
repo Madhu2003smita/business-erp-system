@@ -5,10 +5,32 @@ import Button from "../../../shared/components/Button";
 import CheckBox from "../../../shared/components/CheckBox";
 
 import "../styles/loginform.styles.css";
+import handleApiCall from "../../../shared/services/apiService";
+import { apiMethods, endPoints } from "../../../shared/constants/api";
+import { gooeyToast } from "goey-toast";
+import { useNavigate } from "react-router";
+import { paths } from "../../../shared/constants/routes";
 
 const LoginForm = ({ setToggleForm }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const handleLogin = async () => {
+    try {
+      const payload = { email, password };
+      const result = await handleApiCall(
+        endPoints.login,
+        apiMethods.post,
+        payload,
+      );
+      localStorage.setItem("token", result?.token);
+      gooeyToast.success("Login successfully");
+      navigate(paths.dashboard);
+    } catch (err) {
+      console.log("err", err);
+      gooeyToast.error("Login failed");
+    }
+  };
   return (
     <div className="login-form">
       <h1 className="login-heading">Login</h1>
@@ -26,18 +48,19 @@ const LoginForm = ({ setToggleForm }) => {
         textType="text"
         placeholder="example@gmail.com"
         onChange={(e) => setEmail(e.target.value)}
+        value={email}
       />
       <TextInput
         labelName="Password:"
         textType="password"
         onChange={(e) => setPassword(e.target.value)}
+        value={password}
       />
 
       <Button
         BtnName="Login"
         onClick={() => {
-          console.log("Email=", email);
-          console.log("Password=", password);
+          handleLogin();
         }}
       />
       <h4 className="frgtn-password-heading">Forgotten Password?</h4>
