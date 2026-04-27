@@ -1,0 +1,23 @@
+.signup-form {
+  background-color: white;
+  /* height: 75%; */
+  width: 26%;
+  padding: 14px 22px;
+  border-radius: 10px;
+}
+.signup-heading {
+  margin-bottom: 16px;
+}
+.log-in-heading {
+  margin-bottom: 12px;
+}
+.log-in-toggle,
+.terms-toggle,
+.privacy-policy-toggle {
+  color: #028bbf;
+  cursor: pointer;
+}
+.terms-n-cond {
+  display: flex;
+  gap: 8px;
+}

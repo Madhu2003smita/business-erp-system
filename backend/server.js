@@ -1,7 +1,7 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
 
 const app = express();
 app.use(cors());
@@ -9,43 +9,44 @@ app.use(express.json());
 
 // MongoDB Connection [cite: 145]
 const dbURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/erp-db";
-mongoose.connect(dbURI)
+mongoose
+  .connect(dbURI)
   .then(() => console.log("MongoDB connected successfully"))
-  .catch(err => console.log("Database connection error:", err));
+  .catch((err) => console.log("Database connection error:", err));
 
 // Schema - Expanded for Task 1 Requirements [cite: 27, 48]
-const User = require('./models/User');
+const User = require("./models/User");
 
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes);
 
 // --- EXISTING TEAM ROUTES (DO NOT MODIFY) ---
 
 // READ
-app.get('/api/users', async (req, res) => {
+app.get("/api/users", async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
 
 // CREATE
-app.post('/api/users', async (req, res) => {
+app.post("/api/users", async (req, res) => {
   const newUser = new User({
-    name: req.body.name
+    name: req.body.name,
   });
   await newUser.save();
   res.json(newUser);
 });
 
 // DELETE
-app.delete('/api/users/:id', async (req, res) => {
+app.delete("/api/users/:id", async (req, res) => {
   await User.findByIdAndDelete(req.params.id);
   res.json({ message: "User deleted" });
 });
 
 // UPDATE
-app.put('/api/users/:id', async (req, res) => {
+app.put("/api/users/:id", async (req, res) => {
   await User.findByIdAndUpdate(req.params.id, {
-    name: req.body.name
+    name: req.body.name,
   });
   res.json({ message: "User updated" });
 });
