@@ -18,18 +18,20 @@ mongoose
 const User = require("./models/User");
 
 const authRoutes = require("./routes/authRoutes");
+const authMiddleware = require("./middleware/authMiddleware");
+const roleMiddleware = require("./middleware/roleMiddleware");
 app.use("/api/auth", authRoutes);
 
 // --- EXISTING TEAM ROUTES (DO NOT MODIFY) ---
 
-// READ
-app.get("/api/users", async (req, res) => {
+// READ — any authenticated user
+app.get("/api/users", authMiddleware, async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
 
-// CREATE
-app.post("/api/users", async (req, res) => {
+// CREATE — admin only
+app.post("/api/users", authMiddleware, roleMiddleware("admin"), async (req, res) => {
   const newUser = new User({
     name: req.body.name,
   });
@@ -37,14 +39,14 @@ app.post("/api/users", async (req, res) => {
   res.json(newUser);
 });
 
-// DELETE
-app.delete("/api/users/:id", async (req, res) => {
+// DELETE — admin only
+app.delete("/api/users/:id", authMiddleware, roleMiddleware("admin"), async (req, res) => {
   await User.findByIdAndDelete(req.params.id);
   res.json({ message: "User deleted" });
 });
 
-// UPDATE
-app.put("/api/users/:id", async (req, res) => {
+// UPDATE — admin only
+app.put("/api/users/:id", authMiddleware, roleMiddleware("admin"), async (req, res) => {
   await User.findByIdAndUpdate(req.params.id, {
     name: req.body.name,
   });

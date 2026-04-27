@@ -5,7 +5,7 @@ const User = require('../models/User');
 // REGISTER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Missing fields" });
@@ -21,7 +21,8 @@ exports.register = async (req, res) => {
     const user = new User({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: role === "admin" ? "admin" : "user"
     });
 
     await user.save();
@@ -45,14 +46,15 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(401).json({ message: "Invalid password" });
 
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "1d" }
     );
 
     res.json({
       message: "Login successful",
-      token
+      token,
+      role: user.role
     });
 
   } catch (error) {
