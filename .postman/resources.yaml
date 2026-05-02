@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 78b02d2c-d546-4718-8a1d-0749ff9eb180
+
+cloudResources:
+  collections:
+    ..\postman\collections\Amdox ERP System: 3de56d61-9f64-49f1-aaa1-4335d280cfed
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/
