@@ -20,12 +20,17 @@ mongoose
 const User = require("./models/User");
 const authRoutes = require("./routes/authRoutes");
 const healthRoutes = require("./routes/healthRoutes");
+const tenantRoutes = require("./routes/tenantRoutes");
+const departmentRoutes = require("./routes/departmentRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const roleMiddleware = require("./middleware/roleMiddleware");
 
-
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
+app.use("/api/tenants", tenantRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/api/employees", employeeRoutes);
 
 
 
