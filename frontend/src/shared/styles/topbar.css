@@ -7,7 +7,37 @@
   padding: 0 2rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+/* Container for the menu button and title */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 
+/* The button that was "useless" before */
+.menu-btn {
+  display: none; /* Default: Hidden on Desktop */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #333;
+  transition: background 0.2s;
+  border-radius: 4px;
+}
+
+.menu-btn:hover {
+  background-color: #f3f4f6;
+}
+
+/* MOBILE VIEW: Show the button when the screen is small */
+@media (max-width: 768px) {
+  .menu-btn {
+    display: flex; /* Appears only on mobile */
+    align-items: center;
+    justify-content: center;
+  }
+}
 .topbar-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -50,4 +80,27 @@
 
 .logout-btn:hover {
   background-color: #fecaca;
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-btn {
+  display: none; /* Hidden on desktop */
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 1rem;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .menu-btn {
+    display: block; /* Shown on mobile */
+  }
+  
+  .user-info {
+    display: none; /* Hide name on very small screens to save space */
+  }
 }

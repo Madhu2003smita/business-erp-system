@@ -1,5 +1,5 @@
 import React from 'react';
-import Layout from '../shared/components/Layout';
+
 import StatCard from '../shared/components/StatCard';
 import { FaUsers, FaChartLine, FaClipboardList, FaProjectDiagram } from 'react-icons/fa';
 import '../shared/styles/layout.css'; // Reuse layout spacing or add specific dashboard styles
@@ -43,7 +43,7 @@ const Dashboard = () => {
   };
 
   return (
-    <Layout>
+    <div className="dashboard-wrapper">
       <header style={{ marginBottom: '2rem' }}>
         <h2 style={{ margin: 0, color: '#111827' }}>Business Overview</h2>
         <p style={{ color: '#6b7280', margin: '5px 0 0' }}>Welcome back to your ERP management portal.</p>
@@ -77,7 +77,7 @@ const Dashboard = () => {
           </ul>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

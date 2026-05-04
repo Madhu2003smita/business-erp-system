@@ -1,19 +1,20 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { sendSuccess, sendError } = require('../utils/response');
 
-// REGISTER
-exports.register = async (req, res) => {
+
+exports.register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "Missing fields" });
+      return sendError(res, "Missing fields", 400);
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
+      return sendError(res, "Email already exists", 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,23 +28,23 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    sendSuccess(res, "User registered successfully", null, 201);
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-//  LOGIN
-exports.login = async (req, res) => {
+
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select('+password');
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return sendError(res, "User not found", 404);
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid password" });
+    if (!isMatch) return sendError(res, "Invalid password", 401);
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -51,13 +52,9 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({
-      message: "Login successful",
-      token,
-      role: user.role
-    });
+    sendSuccess(res, "Login successful", { token, role: user.role });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
