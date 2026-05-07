@@ -25,7 +25,7 @@ const LoginForm = ({ setToggleForm }) => {
       );
        console.log("FULL RESULT:", result);
 
-      localStorage.setItem("token", result?.token);
+      localStorage.setItem("token", result?.data?.token);
       gooeyToast.success("Login successfully");
       navigate(paths.dashboard);
     } catch (err) {
