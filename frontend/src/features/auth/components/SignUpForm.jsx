@@ -29,8 +29,10 @@ const SignUpForm = ({ setToggleForm }) => {
       const payload = { name: fullName, email, password };
       await handleApiCall(endPoints.register, apiMethods.post, payload);
       gooeyToast.success("Signed up successfully");
+      setToggleForm("login");
     } catch (err) {
       console.log("err", err);
+      gooeyToast.error(err.message || "Signup failed");
     }
   };
   return (
