@@ -53,9 +53,10 @@
 }
 
 .sidebar-link.active {
-  background-color: #3b82f6;
-  color: #ffffff;
-  border-left: 4px solid #ffffff;
+ background: rgba(59, 130, 246, 0.1); /* Very light blue background */
+  color: #3b82f6;
+  border-right: 4px solid #3b82f6; /* A "marker" on the side */
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
