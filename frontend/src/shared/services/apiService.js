@@ -1,17 +1,21 @@
 const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
-const handleApiCall = async (endPoint, method, data) => {
+const handleApiCall = async (endPoint, method, data, requiresAuth = false) => {
   try {
     const url = `${apiUrl}${endPoint}`;
-    const response = await fetch(url, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    const headers = { "Content-Type": "application/json" };
 
+    if (requiresAuth) {
+      const token = localStorage.getItem("token");
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const options = { method, headers };
+    if (data) options.body = JSON.stringify(data);
+
+    const response = await fetch(url, options);
     const result = await response.json();
+
     if (!response.ok) {
       throw new Error(result.message || "Something went wrong");
     }

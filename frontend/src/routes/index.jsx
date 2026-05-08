@@ -1,7 +1,8 @@
 import React from "react";
-import { createBrowserRouter, Navigate } from "react-router"; // Correct v7 import
+import { createBrowserRouter, Navigate } from "react-router";
 import Auth from "../pages/Auth";
 import Dashboard from "../pages/Dashboard";
+import HR from "../pages/HR";
 import Layout from "../shared/components/Layout";
 import ProtectedRoute from "./ProtectedRoute";
 import { paths } from "../shared/constants/routes";
@@ -12,12 +13,10 @@ const routes = createBrowserRouter([
     element: <Auth />,
   },
   {
-    // All routes inside this object require a login token
-    element: <ProtectedRoute />, 
+    element: <ProtectedRoute />,
     children: [
       {
-        // All routes inside here will display the Sidebar and Topbar
-        element: <Layout />, 
+        element: <Layout />,
         children: [
           {
             path: paths.dashboard,
@@ -25,7 +24,7 @@ const routes = createBrowserRouter([
           },
           {
             path: "/hr",
-            element: <div style={{ padding: '20px' }}><h1>HR Management</h1></div>,
+            element: <HR />,
           },
           {
             path: "/finance",
@@ -48,7 +47,6 @@ const routes = createBrowserRouter([
     ],
   },
   {
-    // Catch-all: Send unknown URLs back to login or dashboard
     path: "*",
     element: <Navigate to={paths.root} replace />,
   },
