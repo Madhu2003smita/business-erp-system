@@ -14,6 +14,7 @@ const seedDatabase = async () => {
     // 1. Clean up previous seed data to make the script idempotent
     await Tenant.deleteOne({ domain: "acme.com" });
     await User.deleteOne({ email: "admin@acme.com" });
+    await User.deleteOne({ email: "employee@acme.com" });
     console.log("Cleaned up old seed data.");
 
     // 2. Create a fake Tenant
@@ -38,7 +39,17 @@ const seedDatabase = async () => {
     });
     const savedAdmin = await newAdmin.save();
     console.log(`Admin user created: ${savedAdmin.email}`);
-
+    
+    const newEmployee = new User({
+      name: "Acme Employee",
+      email: "employee@acme.com",
+      password: hashedPassword, // Reusing the same hashed 'password123'
+      role: "user",
+      tenantId: savedTenant._id,
+    });
+    const savedEmployee = await newEmployee.save();
+    console.log(`Employee user created: ${savedEmployee.email}`);
+    
     console.log("\nSeed script finished successfully!");
     console.log("Admin User Credentials:");
     console.log("Email: admin@acme.com");
