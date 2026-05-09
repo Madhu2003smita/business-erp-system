@@ -31,6 +31,8 @@ const invoiceRoutes = require("./routes/invoiceRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const purchaseOrderRoutes = require("./routes/purchaseOrderRoutes");
+const leaveRoutes = require("./routes/leaveRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
@@ -42,6 +44,8 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
+app.use("/api/leaves", leaveRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 
 
