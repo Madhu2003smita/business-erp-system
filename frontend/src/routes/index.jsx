@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import Auth from "../pages/Auth";
 import Dashboard from "../pages/Dashboard";
 import HR from "../pages/HR";
+import Finance from "../pages/Finance";
 import Layout from "../shared/components/Layout";
 import ProtectedRoute from "./ProtectedRoute";
 import { paths } from "../shared/constants/routes";
@@ -28,7 +29,7 @@ const routes = createBrowserRouter([
           },
           {
             path: "/finance",
-            element: <div style={{ padding: '20px' }}><h1>Finance & Accounts</h1></div>,
+            element: <Finance />,
           },
           {
             path: "/supply-chain",

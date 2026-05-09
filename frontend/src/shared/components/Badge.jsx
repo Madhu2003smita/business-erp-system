@@ -9,6 +9,15 @@ const badgeColors = {
   pending: "badge-yellow",
   approved: "badge-green",
   rejected: "badge-red",
+  posted: "badge-green",
+  draft: "badge-yellow",
+  reversed: "badge-red",
+  asset: "badge-green",
+  liability: "badge-red",
+  equity: "badge-blue",
+  revenue: "badge-green",
+  expense: "badge-yellow",
+  delivered: "badge-green",
 };
 
 const Badge = ({ status }) => {
