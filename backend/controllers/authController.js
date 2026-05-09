@@ -47,7 +47,7 @@ exports.login = async (req, res, next) => {
     if (!isMatch) return sendError(res, "Invalid password", 401);
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, tenantId: user.tenantId },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "1d" }
     );
