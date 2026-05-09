@@ -1,0 +1,9 @@
+.finance-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+.finance-table th { text-align: left; padding: 12px; background: #f9fafb; border-bottom: 2px solid #eee; }
+.finance-table td { padding: 12px; border-bottom: 1px solid #eee; }
+.btn-primary { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; }
+.error-text { color: #e11d48; background: #fff1f2; padding: 8px; border-radius: 4px; font-size: 13px; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-box { background: white; padding: 24px; border-radius: 12px; width: 450px; }
+.form-grid { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+.form-grid input, .form-grid select, .form-grid textarea { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }

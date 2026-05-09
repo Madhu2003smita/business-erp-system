@@ -6,7 +6,7 @@ import HR from "../pages/HR";
 import Layout from "../shared/components/Layout";
 import ProtectedRoute from "./ProtectedRoute";
 import { paths } from "../shared/constants/routes";
-
+import Finance from "../pages/Finance/Finance";
 const routes = createBrowserRouter([
   {
     path: paths.root,
@@ -27,8 +27,8 @@ const routes = createBrowserRouter([
             element: <HR />,
           },
           {
-            path: "/finance",
-            element: <div style={{ padding: '20px' }}><h1>Finance & Accounts</h1></div>,
+            path: paths.finance,
+    element: <Finance />,
           },
           {
             path: "/supply-chain",
