@@ -1,13 +1,22 @@
-const apiUrl = import.meta.env.VITE_API_BASE_URL;
+const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+
+const buildUrl = (endPoint) => {
+  const base = apiUrl.replace(/\/+$/, "");
+  const path = String(endPoint || "").replace(/^\/+/, "");
+  return `${base}/${path}`;
+};
 
 const handleApiCall = async (endPoint, method, data, requiresAuth = false) => {
   try {
-    const url = `${apiUrl}${endPoint}`;
+    const url = buildUrl(endPoint);
     const headers = { "Content-Type": "application/json" };
 
     if (requiresAuth) {
       const token = localStorage.getItem("token");
-      if (token) headers["Authorization"] = `Bearer ${token}`;
+      if (!token) {
+        throw new Error("Authentication token missing");
+      }
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     const options = { method, headers };

@@ -3,6 +3,8 @@ export const endPoints = {
   login: "auth/login",
   employees: "employees",
   departments: "departments",
+  vendors: "vendors",
+  purchaseOrders: "purchase-orders",
 };
 
 export const apiMethods = {
