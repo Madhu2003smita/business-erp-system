@@ -5,6 +5,7 @@ import Dashboard from "../pages/Dashboard";
 import HR from "../pages/HR";
 import Finance from "../pages/Finance";
 import SupplyChain from "../pages/SupplyChain";
+import Projects from "../pages/Projects";
 import Layout from "../shared/components/Layout";
 import ProtectedRoute from "./ProtectedRoute";
 import { paths } from "../shared/constants/routes";
@@ -20,30 +21,12 @@ const routes = createBrowserRouter([
       {
         element: <Layout />,
         children: [
-          {
-            path: paths.dashboard,
-            element: <Dashboard />,
-          },
-          {
-            path: "/hr",
-            element: <HR />,
-          },
-          {
-            path: "/finance",
-            element: <Finance />,
-          },
-          {
-            path: "/supply-chain",
-            element: <SupplyChain />,
-          },
-          {
-            path: "/projects",
-            element: <div style={{ padding: '20px' }}><h1>Project Management</h1></div>,
-          },
-          {
-            path: "/settings",
-            element: <div style={{ padding: '20px' }}><h1>Settings</h1></div>,
-          },
+          { path: paths.dashboard, element: <Dashboard /> },
+          { path: "/hr", element: <HR /> },
+          { path: "/finance", element: <Finance /> },
+          { path: "/supply-chain", element: <SupplyChain /> },
+          { path: "/projects", element: <Projects /> },
+          { path: "/settings", element: <div style={{ padding: '20px' }}><h1>Settings</h1></div> },
         ],
       },
     ],
