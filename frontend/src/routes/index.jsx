@@ -4,6 +4,7 @@ import Auth from "../pages/Auth";
 import Dashboard from "../pages/Dashboard";
 import HR from "../pages/HR";
 import Finance from "../pages/Finance";
+import SupplyChain from "../pages/SupplyChain";
 import Layout from "../shared/components/Layout";
 import ProtectedRoute from "./ProtectedRoute";
 import { paths } from "../shared/constants/routes";
@@ -33,7 +34,7 @@ const routes = createBrowserRouter([
           },
           {
             path: "/supply-chain",
-            element: <div style={{ padding: '20px' }}><h1>Supply Chain</h1></div>,
+            element: <SupplyChain />,
           },
           {
             path: "/projects",

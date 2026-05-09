@@ -29,6 +29,8 @@ const roleMiddleware = require("./middleware/roleMiddleware");
 const glRoutes = require("./routes/glRoutes");
 const invoiceRoutes = require("./routes/invoiceRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const vendorRoutes = require("./routes/vendorRoutes");
+const purchaseOrderRoutes = require("./routes/purchaseOrderRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
@@ -38,6 +40,8 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/gl", glRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/vendors", vendorRoutes);
+app.use("/api/purchase-orders", purchaseOrderRoutes);
 
 
 
