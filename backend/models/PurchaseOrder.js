@@ -7,6 +7,7 @@ const poItemSchema = new mongoose.Schema(
       required: [true, "Item name is required"],
       trim: true,
     },
+    sku: { type: String },
     quantity: {
       type: Number,
       required: [true, "Quantity is required"],
@@ -26,7 +27,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     poNumber: {
       type: String,
       required: true,
-      unique: true,
+      //unique: true,
       trim: true,
     },
     vendorId: {

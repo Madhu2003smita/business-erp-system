@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Tenant = require("../models/Tenant");
 const User = require("../models/User");
+const PurchaseOrder = require("../models/PurchaseOrder");
+const Vendor = require("../models/Vendor");
+const InventoryItem = require("../models/InventoryItem");
 
 const dbURI = process.env.MONGO_URI;
 
@@ -15,8 +18,11 @@ const seedDatabase = async () => {
     await Tenant.deleteOne({ domain: "acme.com" });
     await User.deleteOne({ email: "admin@acme.com" });
     await User.deleteOne({ email: "employee@acme.com" });
+    await PurchaseOrder.deleteMany({});
+    await Vendor.deleteMany({});
+    await InventoryItem.deleteMany({});
     console.log("Cleaned up old seed data.");
-
+   
     // 2. Create a fake Tenant
     const newTenant = new Tenant({
       name: "Acme Corp",
