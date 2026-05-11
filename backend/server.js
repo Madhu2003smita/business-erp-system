@@ -36,6 +36,7 @@ const leaveRoutes = require("./routes/leaveRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const projectRoutes = require('./routes/projectRoutes');
+const payrollRoutes = require("./routes/payrollRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
@@ -50,9 +51,10 @@ app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/payroll", payrollRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/projects', projectRoutes);
-
+app.use("/api/payroll", payrollRoutes);
 
 app.get("/api/users", authMiddleware, async (req, res, next) => {
   try {

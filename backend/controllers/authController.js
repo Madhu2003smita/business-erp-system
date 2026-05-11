@@ -58,3 +58,31 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+
+// CHANGE PASSWORD
+exports.changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return sendError(res, "Current password and new password are required", 400);
+    }
+
+    if (newPassword.length < 6) {
+      return sendError(res, "New password must be at least 6 characters", 400);
+    }
+
+    const user = await User.findById(req.user.id).select("+password");
+    if (!user) return sendError(res, "User not found", 404);
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return sendError(res, "Current password is incorrect", 401);
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    sendSuccess(res, "Password changed successfully");
+  } catch (error) {
+    next(error);
+  }
+};
