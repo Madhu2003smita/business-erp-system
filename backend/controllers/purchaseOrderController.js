@@ -1,5 +1,6 @@
 const PurchaseOrder = require("../models/PurchaseOrder");
 const Vendor = require("../models/Vendor");
+const InventoryItem = require("../models/InventoryItem");
 const { sendSuccess, sendError } = require("../utils/response");
 
 exports.getAllPurchaseOrders = async (req, res, next) => {
@@ -59,6 +60,59 @@ exports.createPurchaseOrder = async (req, res, next) => {
 
     const populated = await PurchaseOrder.findById(po._id).populate("vendorId", "name email phone status");
     sendSuccess(res, "Purchase order created successfully", populated, 201);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Mark a Purchase Order as delivered and update inventory quantities
+exports.deliverPurchaseOrder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user?.tenantId || null;
+
+    const po = await PurchaseOrder.findOne({ _id: id, ...(tenantId ? { tenantId } : {}) });
+    if (!po) return sendError(res, "Purchase order not found", 404);
+
+    if (po.status === "delivered") {
+      return sendError(res, "Purchase order already delivered", 400);
+    }
+
+    // For each item in the PO, find inventory by SKU (preferred) or name and increment quantity
+    const items = Array.isArray(po.items) ? po.items : [];
+    for (const it of items) {
+      const itemQty = Number(it.quantity || 0);
+      if (itemQty <= 0) continue;
+
+      const filter = { ...(tenantId ? { tenantId } : {}) };
+      if (it.sku) filter.sku = it.sku;
+      else if (it.name) filter.name = it.name;
+      else continue; // nothing to match on
+
+      const inv = await InventoryItem.findOne(filter);
+      if (inv) {
+        inv.quantity = (inv.quantity || 0) + itemQty;
+        await inv.save();
+      } else {
+        // If inventory item doesn't exist, create it so stock reflects delivery
+        await InventoryItem.create({
+          name: it.name || (it.sku ? it.sku : "Unnamed Item"),
+          sku: it.sku || `OLD-PO-ITEM-${Date.now()}`,
+          quantity: itemQty,
+          reorderThreshold: 0,
+          unitPrice: Number(it.unitPrice || 0) || 0,
+          warehouse: it.warehouse || "",
+          tenantId,
+        });
+      }
+    }
+
+    po.status = "delivered";
+    po.deliveredAt = new Date();
+    await po.save();
+
+    const populated = await PurchaseOrder.findById(po._id).populate("vendorId", "name email phone status");
+    return sendSuccess(res, "Purchase order delivered and inventory updated", populated);
   } catch (err) {
     next(err);
   }

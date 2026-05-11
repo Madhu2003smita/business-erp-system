@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const inventoryRoutes = require('./routes/inventoryRoutes');
 
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const { sendSuccess, sendError } = require("./utils/response");
@@ -46,7 +47,7 @@ app.use("/api/vendors", vendorRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
-
+app.use('/api/inventory', inventoryRoutes);
 
 
 app.get("/api/users", authMiddleware, async (req, res, next) => {
