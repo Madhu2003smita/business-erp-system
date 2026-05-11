@@ -5,6 +5,7 @@ export const endPoints = {
   departments: "departments",
   vendors: "vendors",
   purchaseOrders: "purchase-orders",
+  inventory: "inventory",
   leaveTypes: "leaves/leave-types",
   leaveRequests: "leaves/request",
   attendance: "attendance",
