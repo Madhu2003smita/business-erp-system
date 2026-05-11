@@ -54,7 +54,6 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/projects', projectRoutes);
-app.use("/api/payroll", payrollRoutes);
 
 app.get("/api/users", authMiddleware, async (req, res, next) => {
   try {

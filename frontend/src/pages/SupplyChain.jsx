@@ -56,7 +56,7 @@ const SupplyChain = () => {
       try {
         const decoded = jwtDecode(token);
         setUser({
-          name: decoded.name || decoded.sub || "User",
+          name: decoded.name || decoded.email || "User",
           role: decoded.role || "Guest",
         });
       } catch (error) {
@@ -69,14 +69,22 @@ const SupplyChain = () => {
     setLoading(true);
     setError("");
     try {
-      const [vRes, poRes, invRes] = await Promise.all([
+      const results = await Promise.allSettled([
         handleApiCall(endPoints.vendors, apiMethods.get, null, true),
         handleApiCall(endPoints.purchaseOrders, apiMethods.get, null, true),
-        handleApiCall("inventory", apiMethods.get, null, true),
+        handleApiCall(endPoints.inventory, apiMethods.get, null, true),
       ]);
+      const errs = [];
+      const vRes = results[0].status === "fulfilled" ? results[0].value : null;
+      const poRes = results[1].status === "fulfilled" ? results[1].value : null;
+      const invRes = results[2].status === "fulfilled" ? results[2].value : null;
+      if (results[0].status === "rejected") errs.push(results[0].reason?.message || "Vendors failed");
+      if (results[1].status === "rejected") errs.push(results[1].reason?.message || "Purchase orders failed");
+      if (results[2].status === "rejected") errs.push(results[2].reason?.message || "Inventory failed");
       setVendors(vRes?.data || vRes || []);
       setPurchaseOrders(poRes?.data || poRes || []);
       setInventory(invRes?.data || invRes || []);
+      if (errs.length) setError(errs.join(" · "));
     } catch (e) {
       setError(e?.message || "Failed to load supply chain data");
     } finally {
@@ -304,7 +312,7 @@ const SupplyChain = () => {
                 <tbody>
                   {purchaseOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="empty-cell">No purchase orders yet.</td>
+                      <td colSpan={6} className="empty-cell">No purchase orders yet.</td>
                     </tr>
                   ) : (
                     purchaseOrders.map((po) => {
