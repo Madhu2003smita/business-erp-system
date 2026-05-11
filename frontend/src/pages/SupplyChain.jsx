@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { jwtDecode } from "jwt-decode";
 import { gooeyToast } from "goey-toast";
 
 import Modal from "../shared/components/Modal";
@@ -18,9 +19,11 @@ const SupplyChain = () => {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("vendors");
+  const [user, setUser] = useState({ name: "User", role: "Guest" });
 
   const [vendors, setVendors] = useState([]);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [inventory, setInventory] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,18 +52,31 @@ const SupplyChain = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) navigate("/", { replace: true });
+    else {
+      try {
+        const decoded = jwtDecode(token);
+        setUser({
+          name: decoded.name || decoded.sub || "User",
+          role: decoded.role || "Guest",
+        });
+      } catch (error) {
+        console.error("Token decoding failed:", error);
+      }
+    }
   }, [navigate]);
 
   const loadAll = async () => {
     setLoading(true);
     setError("");
     try {
-      const [vRes, poRes] = await Promise.all([
+      const [vRes, poRes, invRes] = await Promise.all([
         handleApiCall(endPoints.vendors, apiMethods.get, null, true),
         handleApiCall(endPoints.purchaseOrders, apiMethods.get, null, true),
+        handleApiCall("inventory", apiMethods.get, null, true),
       ]);
       setVendors(vRes?.data || vRes || []);
       setPurchaseOrders(poRes?.data || poRes || []);
+      setInventory(invRes?.data || invRes || []);
     } catch (e) {
       setError(e?.message || "Failed to load supply chain data");
     } finally {
@@ -103,6 +119,18 @@ const SupplyChain = () => {
     });
     setPoErrors({});
     setIsPoModalOpen(true);
+  };
+
+  const markDelivered = async (poId) => {
+    setError("");
+    try {
+      await handleApiCall(`purchase-orders/${poId}/deliver`, apiMethods.patch, null, true);
+      gooeyToast.success("Purchase order marked as delivered");
+      await loadAll();
+    } catch (e) {
+      setError(e?.message || "Failed to mark delivered");
+      gooeyToast.error(e?.message || "Failed to mark delivered");
+    }
   };
 
   const validateVendor = () => {
@@ -198,11 +226,15 @@ const SupplyChain = () => {
 
         <div className="sc-actions">
           {activeTab === "vendors" ? (
-            <button className="btn-primary" onClick={openVendorModal}>+ Add Vendor</button>
+            user?.role === "admin" && (
+              <button className="btn-primary" onClick={openVendorModal}>+ Add Vendor</button>
+            )
           ) : (
-            <button className="btn-primary" onClick={openPoModal} disabled={vendors.length === 0}>
-              + Add PO
-            </button>
+            user?.role === "admin" && (
+              <button className="btn-primary" onClick={openPoModal} disabled={vendors.length === 0}>
+                + Add PO
+              </button>
+            )
           )}
         </div>
       </div>
@@ -215,6 +247,9 @@ const SupplyChain = () => {
         </button>
         <button className={`tab-btn ${activeTab === "purchaseOrders" ? "active" : ""}`} onClick={() => setActiveTab("purchaseOrders")}>
           Purchase Orders ({purchaseOrders.length})
+        </button>
+        <button className={`tab-btn ${activeTab === "inventory" ? "active" : ""}`} onClick={() => setActiveTab("inventory")}>
+          Inventory ({inventory.length})
         </button>
       </div>
 
@@ -261,6 +296,7 @@ const SupplyChain = () => {
                     <th>PO Number</th>
                     <th>Vendor</th>
                     <th>Amount</th>
+                    <th>Actions</th>
                     <th>Status</th>
                     <th>Date</th>
                   </tr>
@@ -275,7 +311,7 @@ const SupplyChain = () => {
                       const vid = po.vendorId || po.vendor?._id || po.vendor;
                       const vendorName =
                         po.vendorName ||
-                        po.vendor?.name ||
+                        po.vendorId?.name ||
                         vendorById.get(vid)?.name ||
                         "—";
 
@@ -283,8 +319,15 @@ const SupplyChain = () => {
                         <tr key={po._id || po.id}>
                           <td><code>{po.poNumber || po.number || po.id}</code></td>
                           <td>{vendorName}</td>
-                          <td className="amount-positive">{Number(po.amount || 0).toLocaleString()}</td>
-                          <td><Badge status={po.status || "pending"} /></td>
+                            <td className="amount-positive">{Number(po.amount || 0).toLocaleString()}</td>
+                            <td>
+                              {po.status === 'pending' ? (
+                                <button className="btn-secondary" onClick={() => markDelivered(po._id || po.id)}>Mark Delivered</button>
+                              ) : (
+                                <span style={{ fontSize: 12, color: '#666' }}>—</span>
+                              )}
+                            </td>
+                            <td><Badge status={po.status || "pending"} /></td>
                           <td>{po.deliveryDate ? new Date(po.deliveryDate).toLocaleDateString() : (po.createdAt ? new Date(po.createdAt).toLocaleDateString() : "—")}</td>
                         </tr>
                       );
@@ -294,6 +337,39 @@ const SupplyChain = () => {
               </table>
             </div>
           )}
+
+            {activeTab === "inventory" && (
+              <div className="table-wrapper">
+                <table className="sc-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>SKU</th>
+                      <th>Quantity</th>
+                      <th>Unit Price</th>
+                      <th>Warehouse</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inventory.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="empty-cell">No inventory items yet.</td>
+                      </tr>
+                    ) : (
+                      inventory.map((it) => (
+                        <tr key={it._id || it.id}>
+                          <td>{it.name}</td>
+                          <td>{it.sku || '—'}</td>
+                          <td>{Number(it.quantity || 0).toLocaleString()}</td>
+                          <td>{Number(it.unitPrice || 0).toLocaleString()}</td>
+                          <td>{it.warehouse || '—'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
         </>
       )}
 
