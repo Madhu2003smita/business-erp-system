@@ -122,7 +122,7 @@ const Dashboard = () => {
 
       <div style={dashboardStyles.grid}>
         {statCards.map((stat, index) => (
-          <StatCard key={index} title={stat.title} value={stat.value} icon={stat.icon} />
+          <StatCard key={index} title={stat.title} value={stat.value} icon={stat.icon} loading={loading} />
         ))}
       </div>
 
