@@ -8,6 +8,8 @@ export const endPoints = {
   leaveTypes: "leaves/leave-types",
   leaveRequests: "leaves/request",
   attendance: "attendance",
+  payroll: "payroll",
+  payrollRun: "payroll/run",
 };
 
 export const apiMethods = {
