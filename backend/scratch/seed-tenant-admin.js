@@ -6,6 +6,8 @@ const User = require("../models/User");
 const PurchaseOrder = require("../models/PurchaseOrder");
 const Vendor = require("../models/Vendor");
 const InventoryItem = require("../models/InventoryItem");
+const Project = require("../models/Project");
+const Milestone = require("../models/Milestone");
 
 const dbURI = process.env.MONGO_URI;
 
@@ -21,6 +23,8 @@ const seedDatabase = async () => {
     await PurchaseOrder.deleteMany({});
     await Vendor.deleteMany({});
     await InventoryItem.deleteMany({});
+    await Project.deleteMany({});
+    await Milestone.deleteMany({});
     console.log("Cleaned up old seed data.");
    
     // 2. Create a fake Tenant

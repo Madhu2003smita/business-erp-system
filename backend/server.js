@@ -35,6 +35,7 @@ const purchaseOrderRoutes = require("./routes/purchaseOrderRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const projectRoutes = require('./routes/projectRoutes');
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
@@ -50,6 +51,7 @@ app.use("/api/leaves", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/projects', projectRoutes);
 
 
 app.get("/api/users", authMiddleware, async (req, res, next) => {
