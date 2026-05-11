@@ -35,6 +35,7 @@ const purchaseOrderRoutes = require("./routes/purchaseOrderRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const payrollRoutes = require("./routes/payrollRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
@@ -49,6 +50,7 @@ app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/payroll", payrollRoutes);
 app.use('/api/inventory', inventoryRoutes);
 
 
