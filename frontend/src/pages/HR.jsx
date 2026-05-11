@@ -8,6 +8,64 @@ import Badge from "../shared/components/Badge";
 import { gooeyToast } from "goey-toast";
 import "./styles/hr.styles.css";
 
+// ─── Payroll Run Form ─────────────────────────────────────────────────────────
+const PayrollRunForm = ({ onSuccess, onClose }) => {
+  const currentDate = new Date();
+  const [form, setForm] = useState({
+    month: currentDate.getMonth() + 1,
+    year: currentDate.getFullYear(),
+  });
+  const [loading, setLoading] = useState(false);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    setLoading(true);
+    try {
+      const result = await handleApiCall(endPoints.payrollRun, apiMethods.post, {
+        month: Number(form.month),
+        year: Number(form.year),
+      }, true);
+      gooeyToast.success(`Payroll processed for ${result?.data?.totalEmployees || 0} employees`);
+      onSuccess();
+    } catch (err) {
+      gooeyToast.error(err.message || "Failed to run payroll");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form className="hr-form" onSubmit={handleSubmit}>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Month *</label>
+          <select value={form.month} onChange={e => setForm({ ...form, month: e.target.value })}>
+            {months.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Year *</label>
+          <input type="number" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} min="2020" max="2030" />
+        </div>
+      </div>
+      <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0" }}>
+        This will calculate payroll for all active employees. Net salary = Basic salary - 10% tax.
+      </p>
+      <div className="form-actions">
+        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+        <button type="submit" className="btn-submit" disabled={loading}>
+          {loading ? "Processing..." : "Run Payroll"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 // ─── Leave Request Form ───────────────────────────────────────────────────────
 const LeaveRequestForm = ({ employees, leaveTypes, onSuccess, onClose }) => {
   const [form, setForm] = useState({
@@ -138,6 +196,7 @@ const HR = () => {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [payrollRecords, setPayrollRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -146,7 +205,8 @@ const HR = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
-  const [clockModal, setClockModal] = useState(null); // "in" | "out" | null
+  const [clockModal, setClockModal] = useState(null);
+  const [isPayrollModalOpen, setIsPayrollModalOpen] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -156,16 +216,18 @@ const HR = () => {
     setLoading(true);
     setError("");
     try {
-      const [empRes, ltRes, lrRes, attRes] = await Promise.allSettled([
+      const [empRes, ltRes, lrRes, attRes, payRes] = await Promise.allSettled([
         handleApiCall(endPoints.employees, apiMethods.get, null, true),
         handleApiCall(endPoints.leaveTypes, apiMethods.get, null, true),
         handleApiCall(endPoints.leaveRequests, apiMethods.get, null, true),
         handleApiCall(endPoints.attendance, apiMethods.get, null, true),
+        handleApiCall(endPoints.payroll, apiMethods.get, null, true),
       ]);
       setEmployees(empRes.status === "fulfilled" ? empRes.value?.data || [] : []);
       setLeaveTypes(ltRes.status === "fulfilled" ? ltRes.value?.data || [] : []);
       setLeaveRequests(lrRes.status === "fulfilled" ? lrRes.value?.data || [] : []);
       setAttendance(attRes.status === "fulfilled" ? attRes.value?.data || [] : []);
+      setPayrollRecords(payRes.status === "fulfilled" ? payRes.value?.data || [] : []);
     } catch (err) {
       setError(err.message || "Failed to load HR data");
     } finally {
@@ -228,6 +290,11 @@ const HR = () => {
               <button className="btn-secondary-action" onClick={() => setClockModal("out")}>Clock Out</button>
             </div>
           )}
+          {activeTab === "payroll" && (
+            <button className="btn-add-employee" onClick={() => setIsPayrollModalOpen(true)}>
+              ▶ Run Payroll
+            </button>
+          )}
         </div>
       </div>
 
@@ -243,6 +310,9 @@ const HR = () => {
         </button>
         <button className={`tab-btn ${activeTab === "attendance" ? "active" : ""}`} onClick={() => setActiveTab("attendance")}>
           Attendance ({attendance.length})
+        </button>
+        <button className={`tab-btn ${activeTab === "payroll" ? "active" : ""}`} onClick={() => setActiveTab("payroll")}>
+          Payroll ({payrollRecords.length})
         </button>
       </div>
 
@@ -327,6 +397,40 @@ const HR = () => {
               </table>
             </div>
           )}
+
+          {/* Payroll Tab */}
+          {activeTab === "payroll" && (
+            <div className="table-wrapper">
+              <table className="hr-table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Month</th>
+                    <th>Year</th>
+                    <th>Basic Salary</th>
+                    <th>Deductions (10%)</th>
+                    <th>Net Salary</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payrollRecords.length === 0 ? (
+                    <tr><td colSpan={7} className="empty-cell">No payroll records. Click "Run Payroll" to process.</td></tr>
+                  ) : payrollRecords.map(p => (
+                    <tr key={p._id}>
+                      <td>{p.employee?.name || "—"}</td>
+                      <td>{new Date(0, p.month - 1).toLocaleString("default", { month: "long" })}</td>
+                      <td>{p.year}</td>
+                      <td className="amount-positive">${p.basicSalary?.toLocaleString()}</td>
+                      <td className="amount-negative">-${p.deductions?.toLocaleString()}</td>
+                      <td className="amount-positive"><strong>${p.netSalary?.toLocaleString()}</strong></td>
+                      <td><Badge status={p.status === "processed" ? "approved" : "pending"} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
@@ -355,6 +459,11 @@ const HR = () => {
       {/* Clock In/Out Modal */}
       <Modal isOpen={!!clockModal} onClose={() => setClockModal(null)} title={clockModal === "in" ? "Clock In" : "Clock Out"}>
         <ClockForm employees={employees} type={clockModal} onSuccess={() => { setClockModal(null); fetchAll(); }} onClose={() => setClockModal(null)} />
+      </Modal>
+
+      {/* Run Payroll Modal */}
+      <Modal isOpen={isPayrollModalOpen} onClose={() => setIsPayrollModalOpen(false)} title="Run Payroll">
+        <PayrollRunForm onSuccess={() => { setIsPayrollModalOpen(false); fetchAll(); }} onClose={() => setIsPayrollModalOpen(false)} />
       </Modal>
     </div>
   );
