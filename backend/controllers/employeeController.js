@@ -4,7 +4,18 @@ const { sendSuccess, sendError } = require("../utils/response");
 // CREATE
 exports.createEmployee = async (req, res, next) => {
   try {
-    const { name, email, department, designation, salary, joiningDate, status, tenantId } = req.body;
+    const sanitizedBody = { ...req.body };
+
+    // Prevent ObjectId cast errors from empty string values
+    if (sanitizedBody.department === "") {
+      sanitizedBody.department = null;
+    }
+
+    if (sanitizedBody.tenantId === "") {
+      delete sanitizedBody.tenantId;
+    }
+
+    const { name, email, department, designation, salary, joiningDate, status } = sanitizedBody;
 
     if (!name || !email) return sendError(res, "Name and email are required", 400);
 
@@ -19,7 +30,7 @@ exports.createEmployee = async (req, res, next) => {
       salary,
       joiningDate,
       status,
-      tenantId: tenantId || null,
+      tenantId: req.user.tenantId,
       createdBy: req.user.id,
     });
 
@@ -59,7 +70,20 @@ exports.getEmployeeById = async (req, res, next) => {
 // UPDATE
 exports.updateEmployee = async (req, res, next) => {
   try {
-    const employee = await Employee.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const sanitizedBody = { ...req.body };
+
+    // Prevent ObjectId cast errors from empty string values
+    if (sanitizedBody.department === "") {
+      sanitizedBody.department = null;
+    }
+
+    if (sanitizedBody.tenantId === "") {
+      delete sanitizedBody.tenantId;
+    }
+
+    const employee = await Employee.findByIdAndUpdate(req.params.id, sanitizedBody, {
+      returnDocument: 'after',
+    });
     if (!employee) return sendError(res, "Employee not found", 404);
     sendSuccess(res, "Employee updated successfully", employee);
   } catch (err) {
@@ -73,7 +97,7 @@ exports.deleteEmployee = async (req, res, next) => {
     const employee = await Employee.findByIdAndUpdate(
       req.params.id,
       { isDeleted: true, deletedAt: new Date() },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!employee) return sendError(res, "Employee not found", 404);
     sendSuccess(res, "Employee deleted successfully");

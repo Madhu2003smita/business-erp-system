@@ -7,10 +7,10 @@ const { runPayroll, getAllPayroll, getPayrollByEmployee } = require("../controll
 // Run payroll — admin only
 router.post("/run", authMiddleware, roleMiddleware("admin"), runPayroll);
 
-// Get all payroll records
+// Get payroll records (admin: tenant-wide, employee: own payslips only)
 router.get("/", authMiddleware, getAllPayroll);
 
-// Get payroll history for one employee
-router.get("/:employeeId", authMiddleware, getPayrollByEmployee);
+// Get payroll history for one employee (admin only)
+router.get("/:employeeId", authMiddleware, roleMiddleware("admin"), getPayrollByEmployee);
 
 module.exports = router;

@@ -1,9 +1,28 @@
 const mongoose = require('mongoose');
 const Invoice = require('../models/Invoice');
 
+const buildUniqueInvoiceNumber = async (tenantId, requestedInvoiceNumber) => {
+  const baseNumber = String(requestedInvoiceNumber || `INV-${Date.now()}`).trim();
+  let candidate = baseNumber;
+
+  const tenantCollision = await Invoice.findOne({ tenantId, invoiceNumber: candidate });
+  if (tenantCollision) {
+    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    candidate = `${baseNumber}-${uniqueSuffix}`;
+  }
+
+  while (await Invoice.findOne({ invoiceNumber: candidate })) {
+    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    candidate = `${baseNumber}-${uniqueSuffix}`;
+  }
+
+  return candidate;
+};
+
 exports.createInvoice = async (req, res) => {
   try {
     const { type, partyName, amount, currency, dueDate, lineItems } = req.body;
+    const tenantId = req.user?.tenantId;
 
     if (!type || !partyName || amount === undefined || !dueDate || !lineItems) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -13,19 +32,13 @@ exports.createInvoice = async (req, res) => {
       return res.status(400).json({ message: "Type must be 'AP' or 'AR'" });
     }
 
-    // Assume auth middleware sets req.user.tenantId
-    const tenantId = req.user.tenantId;
-
-    const lastInvoice = await Invoice.findOne({ tenantId }).sort({ createdAt: -1 });
-    let invoiceNumber = 'INV-00001';
-
-    if (lastInvoice && lastInvoice.invoiceNumber) {
-      const match = lastInvoice.invoiceNumber.match(/INV-(\d+)/);
-      if (match) {
-        const nextNum = parseInt(match[1], 10) + 1;
-        invoiceNumber = `INV-${nextNum.toString().padStart(5, '0')}`;
-      }
+    if (!tenantId) {
+      return res.status(401).json({ message: 'Unauthorized tenant' });
     }
+
+    req.body.tenantId = tenantId;
+
+    const invoiceNumber = await buildUniqueInvoiceNumber(tenantId, req.body.invoiceNumber);
 
     const invoice = new Invoice({
       tenantId,
@@ -45,6 +58,21 @@ exports.createInvoice = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({ message: 'Invoice number already exists' });
     }
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+exports.getAllInvoices = async (req, res) => {
+  try {
+    const tenantId = req.user?.tenantId;
+
+    if (!tenantId) {
+      return res.status(401).json({ message: 'Unauthorized tenant' });
+    }
+
+    const invoices = await Invoice.find({ tenantId, isDeleted: false }).sort({ createdAt: -1 });
+    return res.status(200).json(invoices);
+  } catch (error) {
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

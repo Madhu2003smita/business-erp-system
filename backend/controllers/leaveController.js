@@ -1,6 +1,7 @@
 const LeaveType = require("../models/LeaveType");
 const LeaveRequest = require("../models/LeaveRequest");
 const Employee = require("../models/Employee");
+const mongoose = require("mongoose");
 const { sendSuccess, sendError } = require("../utils/response");
 
 // CREATE LEAVE TYPE
@@ -50,9 +51,29 @@ exports.submitLeaveRequest = async (req, res, next) => {
 
     const tenantId = req.user.tenantId;
 
+    // Resolve employee identity securely:
+    // 1) Use provided employeeId only if it is a valid ObjectId.
+    // 2) Otherwise fall back to authenticated user's email + tenant.
+    let resolvedEmployee = null;
+
+    if (employeeId && mongoose.Types.ObjectId.isValid(employeeId)) {
+      resolvedEmployee = await Employee.findOne({
+        _id: employeeId,
+        tenantId,
+        isDeleted: false,
+      }).select("_id");
+    }
+
+    if (!resolvedEmployee) {
+      resolvedEmployee = await Employee.findOne({
+        email: req.user.email,
+        tenantId,
+        isDeleted: false,
+      }).select("_id");
+    }
+
     // Check if employee exists
-    const employee = await Employee.findOne({ _id: employeeId, tenantId });
-    if (!employee) {
+    if (!resolvedEmployee) {
       return sendError(res, "Employee not found", 404);
     }
 
@@ -70,7 +91,7 @@ exports.submitLeaveRequest = async (req, res, next) => {
 
     // Check for overlapping leave requests
     const overlapping = await LeaveRequest.findOne({
-      employee: employeeId,
+      employee: resolvedEmployee._id,
       tenantId,
       status: "approved",
       $or: [
@@ -83,13 +104,13 @@ exports.submitLeaveRequest = async (req, res, next) => {
     }
 
     const leaveRequest = await LeaveRequest.create({
-      employee: employeeId,
+      employee: resolvedEmployee._id,
       leaveType: leaveTypeId,
       startDate: start,
       endDate: end,
       totalDays,
       reason,
-      tenantId,
+      tenantId: req.user.tenantId,
     });
 
     sendSuccess(res, "Leave request submitted successfully", leaveRequest, 201);
@@ -109,6 +130,40 @@ exports.getLeaveRequests = async (req, res, next) => {
       .populate("approvedBy", "name email");
 
     sendSuccess(res, "Leave requests fetched successfully", leaveRequests);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET MY LEAVE REQUESTS (FOR AUTHENTICATED EMPLOYEE)
+exports.getMyLeaveRequests = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    let employeeId = req.user.employeeId || null;
+
+    if (!employeeId) {
+      const ownEmployee = await Employee.findOne({
+        tenantId,
+        email: req.user.email,
+        isDeleted: false,
+      }).select("_id");
+
+      if (!ownEmployee) {
+        return sendError(res, "Employee profile not found", 404);
+      }
+
+      employeeId = ownEmployee._id;
+    }
+
+    const leaveRequests = await LeaveRequest.find({
+      tenantId,
+      employee: employeeId,
+    })
+      .populate("employee", "name email")
+      .populate("leaveType", "name maxDays")
+      .populate("approvedBy", "name email");
+
+    sendSuccess(res, "My leave requests fetched successfully", leaveRequests);
   } catch (err) {
     next(err);
   }
