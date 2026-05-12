@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 import handleApiCall from "../shared/services/apiService";
 import { apiMethods, endPoints } from "../shared/constants/api";
 import EmployeeTable from "../features/hr/components/EmployeeTable";
@@ -10,30 +11,27 @@ import "./styles/hr.styles.css";
 
 // ─── Payroll Run Form ─────────────────────────────────────────────────────────
 const PayrollRunForm = ({ onSuccess, onClose }) => {
-  const currentDate = new Date();
-  const [form, setForm] = useState({
-    month: currentDate.getMonth() + 1,
-    year: currentDate.getFullYear(),
-  });
   const [loading, setLoading] = useState(false);
-
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
     setLoading(true);
     try {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
       const result = await handleApiCall(endPoints.payrollRun, apiMethods.post, {
-        month: Number(form.month),
-        year: Number(form.year),
+        month: currentMonth,
+        year: currentYear,
       }, true);
       gooeyToast.success(`Payroll processed for ${result?.data?.totalEmployees || 0} employees`);
       onSuccess();
     } catch (err) {
-      gooeyToast.error(err.message || "Failed to run payroll");
+      if ((err.message || "").toLowerCase().includes("already processed")) {
+        gooeyToast.error(err.message);
+      } else {
+        gooeyToast.error(err.message || "Failed to run payroll");
+      }
     } finally {
       setLoading(false);
     }
@@ -41,20 +39,8 @@ const PayrollRunForm = ({ onSuccess, onClose }) => {
 
   return (
     <form className="hr-form" onSubmit={handleSubmit}>
-      <div className="form-row">
-        <div className="form-group">
-          <label>Month *</label>
-          <select value={form.month} onChange={e => setForm({ ...form, month: e.target.value })}>
-            {months.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Year *</label>
-          <input type="number" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })} min="2020" max="2030" />
-        </div>
-      </div>
       <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0" }}>
-        This will calculate payroll for all active employees. Net salary = Basic salary - 10% tax.
+        This will process payroll for the current month using: Net salary = Basic salary - 10% tax.
       </p>
       <div className="form-actions">
         <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
@@ -147,23 +133,29 @@ const LeaveRequestForm = ({ employees, leaveTypes, onSuccess, onClose }) => {
 
 // ─── Clock In/Out Form ────────────────────────────────────────────────────────
 const ClockForm = ({ employees, type, onSuccess, onClose }) => {
-  const [employeeId, setEmployeeId] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
-    if (!employeeId) { setError("Employee is required"); return; }
     setLoading(true);
     try {
       const endpoint = type === "in"
         ? `${endPoints.attendance}/clock-in`
         : `${endPoints.attendance}/clock-out`;
-      await handleApiCall(endpoint, apiMethods.post, { employeeId }, true);
+      const payload = type === "in" ? null : {};
+      await handleApiCall(endpoint, apiMethods.post, payload, true);
       gooeyToast.success(`Clocked ${type} successfully`);
       onSuccess();
     } catch (err) {
-      gooeyToast.error(err.message || `Failed to clock ${type}`);
+      const message = err.message || `Failed to clock ${type}`;
+      if (
+        message.includes("Already clocked in today") ||
+        message.includes("No active clock-in found")
+      ) {
+        gooeyToast.error(message);
+      } else {
+        gooeyToast.error(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -171,14 +163,6 @@ const ClockForm = ({ employees, type, onSuccess, onClose }) => {
 
   return (
     <form className="hr-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label>Employee *</label>
-        <select value={employeeId} onChange={e => { setEmployeeId(e.target.value); setError(""); }}>
-          <option value="">Select employee</option>
-          {employees.map(emp => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
-        </select>
-        {error && <span className="form-error">{error}</span>}
-      </div>
       <div className="form-actions">
         <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
         <button type="submit" className="btn-submit" disabled={loading}>
@@ -192,6 +176,7 @@ const ClockForm = ({ employees, type, onSuccess, onClose }) => {
 // ─── Main HR Page ─────────────────────────────────────────────────────────────
 const HR = () => {
   const [activeTab, setActiveTab] = useState("employees");
+  const [currentUser, setCurrentUser] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -209,22 +194,64 @@ const HR = () => {
   const [isPayrollModalOpen, setIsPayrollModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchAll();
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setCurrentUser({ role: "Guest" });
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      setCurrentUser({
+        role: decoded.role || "Guest",
+        id: decoded.id,
+        email: decoded.email,
+        tenantId: decoded.tenantId,
+        employeeId: decoded.employeeId,
+      });
+    } catch (err) {
+      setCurrentUser({ role: "Guest" });
+    }
   }, []);
+
+  useEffect(() => {
+    fetchLeaveTypes();
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role !== "Guest") {
+        fetchAll();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [currentUser]);
+
+  const fetchLeaveTypes = async () => {
+    try {
+      const result = await handleApiCall(endPoints.leaveTypes, apiMethods.get, null, true);
+      setLeaveTypes(result?.data || []);
+    } catch (err) {
+      gooeyToast.error(err.message || "Failed to load leave types");
+    }
+  };
 
   const fetchAll = async () => {
     setLoading(true);
     setError("");
     try {
-      const [empRes, ltRes, lrRes, attRes, payRes] = await Promise.allSettled([
+      const leaveRequestsEndpoint = currentUser?.role === "admin"
+        ? endPoints.leaveRequests
+        : `${endPoints.leaveRequests}/me`;
+
+      const [empRes, lrRes, attRes, payRes] = await Promise.allSettled([
         handleApiCall(endPoints.employees, apiMethods.get, null, true),
-        handleApiCall(endPoints.leaveTypes, apiMethods.get, null, true),
-        handleApiCall(endPoints.leaveRequests, apiMethods.get, null, true),
+        handleApiCall(leaveRequestsEndpoint, apiMethods.get, null, true),
         handleApiCall(endPoints.attendance, apiMethods.get, null, true),
         handleApiCall(endPoints.payroll, apiMethods.get, null, true),
       ]);
       setEmployees(empRes.status === "fulfilled" ? empRes.value?.data || [] : []);
-      setLeaveTypes(ltRes.status === "fulfilled" ? ltRes.value?.data || [] : []);
       setLeaveRequests(lrRes.status === "fulfilled" ? lrRes.value?.data || [] : []);
       setAttendance(attRes.status === "fulfilled" ? attRes.value?.data || [] : []);
       setPayrollRecords(payRes.status === "fulfilled" ? payRes.value?.data || [] : []);
@@ -274,12 +301,12 @@ const HR = () => {
           <p className="hr-subtitle">Manage employees, leave requests and attendance</p>
         </div>
         <div className="hr-header-actions">
-          {activeTab === "employees" && (
+          {currentUser?.role === "admin" && activeTab === "employees" && (
             <button className="btn-add-employee" onClick={() => { setSelectedEmployee(null); setIsEmployeeModalOpen(true); }}>
               + Add Employee
             </button>
           )}
-          {activeTab === "leave" && (
+          {currentUser?.role === "admin" && activeTab === "leave" && (
             <button className="btn-add-employee" onClick={() => setIsLeaveModalOpen(true)}>
               + Submit Leave Request
             </button>
@@ -290,7 +317,7 @@ const HR = () => {
               <button className="btn-secondary-action" onClick={() => setClockModal("out")}>Clock Out</button>
             </div>
           )}
-          {activeTab === "payroll" && (
+          {currentUser?.role === "admin" && activeTab === "payroll" && (
             <button className="btn-add-employee" onClick={() => setIsPayrollModalOpen(true)}>
               ▶ Run Payroll
             </button>
@@ -352,7 +379,7 @@ const HR = () => {
                       <td>{lr.totalDays}</td>
                       <td><Badge status={lr.status} /></td>
                       <td>
-                        {lr.status === "pending" && (
+                        {currentUser?.role === "admin" && lr.status === "pending" && (
                           <div className="action-buttons">
                             <button className="btn-approve" onClick={() => handleApprove(lr._id)}>Approve</button>
                             <button className="btn-reject" onClick={() => handleReject(lr._id)}>Reject</button>

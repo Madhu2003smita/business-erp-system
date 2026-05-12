@@ -3,6 +3,10 @@ node_modules/
 backend/scratch/test-apar.js
 backend/scratch/promoteUser.js
 backend/scratch/test-inventory.js
+backend/scratch/test-dashboard.js
+backend/scratch/test-finance-suite.js
+backend/scratch/test-hr-suite.js
+backend/scratch/test-project.js
 # logs
 npm-debug.log*
 yarn-debug.log*

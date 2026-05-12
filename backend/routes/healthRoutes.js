@@ -4,6 +4,20 @@ const mongoose = require("mongoose");
 const { sendSuccess, sendError } = require("../utils/response");
 
 
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     tags:
+ *       - Health
+ *     summary: Check API health and database connectivity.
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Service is healthy.
+ *       503:
+ *         description: Service unavailable because the database is disconnected.
+ */
 router.get("/", (req, res) => {
   const dbState = mongoose.connection.readyState;
 

@@ -1,4 +1,6 @@
 require("dotenv").config();
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -37,6 +39,11 @@ const attendanceRoutes = require("./routes/attendanceRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const projectRoutes = require('./routes/projectRoutes');
 const payrollRoutes = require("./routes/payrollRoutes");
+
+if (process.env.NODE_ENV === 'development') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  console.log('📄 Swagger Docs available at http://localhost:5000/api-docs');
+}
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
