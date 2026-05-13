@@ -95,7 +95,7 @@ The Business ERP System follows a **three-tier architecture** with clear separat
 ![HR Module](./frontend/public/assets/hr-module.png)
 
 ### Swagger API Documentation
-![Swagger API Docs](./frontend/public/assets/swagger-docs.png)
+![Swagger API Docs](./frontend/public/assets/payroll-module.png)
 
 <!-- ### General Ledger (Finance Module)
 ![General Ledger](./frontend/public/assets/general-ledger.png) -->
