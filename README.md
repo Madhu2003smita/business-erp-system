@@ -456,6 +456,9 @@ business-erp-system/
 
 ### Using cURL
 ```bash
+# Admin : Owner of the Project who has access to all departments
+   Email: admin@acme.com
+   Password: password123
 # Register a new user
 curl -X POST http://localhost:5000/api/auth/register \
 	-H "Content-Type: application/json" \
